@@ -1,5 +1,9 @@
 import pandas as pd
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 def clean_data(df):
     # Handle missing values
@@ -22,8 +26,8 @@ def transform_data(file_path):
     # Clean the data
     cleaned_data = clean_data(raw_data)
 
-    # Ensure the processed directory exists
-    processed_dir = 'C:/Users/Mitch/Desktop/data-engineering-project/data/processed'
+    # Get the processed data directory from environment variables
+    processed_dir = os.getenv('PROCESSED_DATA_PATH')
     os.makedirs(processed_dir, exist_ok=True)
 
     # Save the cleaned data to a new CSV file
@@ -33,6 +37,6 @@ def transform_data(file_path):
 
 # Example usage
 if __name__ == "__main__":
-    file_path = 'C:/Users/Mitch/Desktop/data-engineering-project/data/raw/marlins_roster.csv'
+    file_path = os.getenv('RAW_DATA_PATH')
     cleaned_data = transform_data(file_path)
     print(cleaned_data.head())

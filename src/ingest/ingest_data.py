@@ -37,7 +37,7 @@ def ingest_marlins_roster():
     api_key = os.getenv('SPORTS_DATA_API_KEY')
     team = 'MIA'
     players = fetch_team_roster(team, api_key)
-    csv_file_path = 'C:/Users/Mitch/Desktop/data-engineering-project/data/raw/marlins_roster.csv'
+    csv_file_path = os.getenv('RAW_DATA_PATH')
     store_players_in_csv(players, csv_file_path)
 
 # Example usage
