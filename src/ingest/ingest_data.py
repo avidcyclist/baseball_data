@@ -40,6 +40,9 @@ def ingest_marlins_roster():
     csv_file_path = os.getenv('RAW_DATA_PATH')
     store_players_in_csv(players, csv_file_path)
 
+    # Print the first few rows of the DataFrame to inspect the data
+    print(pd.DataFrame(players).head())
+
 # Example usage
 if __name__ == "__main__":
     ingest_marlins_roster()
