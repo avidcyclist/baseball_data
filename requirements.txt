@@ -1,0 +1,8 @@
+pandas
+sqlalchemy
+requests
+pyarrow
+google-cloud-bigquery
+python-dotenv
+numpy
+jsonschema
