@@ -3,6 +3,8 @@
 ## Overview
 This project implements an ETL (Extract, Transform, Load) pipeline for ingesting, processing, and loading baseball data into a database. The pipeline is designed to handle data from various sources, ensuring high data quality and accessibility for analysis.
 
+Still determining what year this data is from, as Andrew McKirahan is listed here, when I know he hasnt played for the Marlins for a bit - will continue to look at the data and see whats up.
+
 ## Project Structure
 ```
 data-engineering-project
