@@ -52,6 +52,7 @@ python scripts/run_etl.py
 This will initiate the data ingestion, transformation, and loading processes.
 
 ## Findings from Visualizations
+- I am not sure what year this data is from.
 
 ### Distribution of Player Heights
 - The majority of players have heights ranging between 70 and 75 inches.
