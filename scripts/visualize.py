@@ -8,7 +8,8 @@ load_dotenv()
 # Load the cleaned data
 file_path = os.getenv('CLEANED_DATA_PATH')
 cleaned_data = pd.read_csv(file_path)
-
+all_players_file_path = os.getenv('ALL_PLAYERS_CSV_PATH')
+all_players_data = pd.read_csv(all_players_file_path)
 # Example visualization: Distribution of player heights
 plt.figure(figsize=(10, 6))
 sns.histplot(cleaned_data['Height'], bins=20, kde=True)
