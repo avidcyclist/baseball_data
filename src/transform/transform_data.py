@@ -38,6 +38,51 @@ def clean_country_names(df):
 
     return df
 
+def clean_state_labels(df):
+    # Define a mapping of full state names to their abbreviations
+    state_mapping = {
+        'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR', 'California': 'CA',
+        'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE', 'Florida': 'FL', 'Georgia': 'GA',
+        'Hawaii': 'HI', 'Idaho': 'ID', 'Illinois': 'IL', 'Indiana': 'IN', 'Iowa': 'IA',
+        'Kansas': 'KS', 'Kentucky': 'KY', 'Louisiana': 'LA', 'Maine': 'ME', 'Maryland': 'MD',
+        'Massachusetts': 'MA', 'Michigan': 'MI', 'Minnesota': 'MN', 'Mississippi': 'MS', 'Missouri': 'MO',
+        'Montana': 'MT', 'Nebraska': 'NE', 'Nevada': 'NV', 'New Hampshire': 'NH', 'New Jersey': 'NJ',
+        'New Mexico': 'NM', 'New York': 'NY', 'North Carolina': 'NC', 'North Dakota': 'ND', 'Ohio': 'OH',
+        'Oklahoma': 'OK', 'Oregon': 'OR', 'Pennsylvania': 'PA', 'Rhode Island': 'RI', 'South Carolina': 'SC',
+        'South Dakota': 'SD', 'Tennessee': 'TN', 'Texas': 'TX', 'Utah': 'UT', 'Vermont': 'VT',
+        'Virginia': 'VA', 'Washington': 'WA', 'West Virginia': 'WV', 'Wisconsin': 'WI', 'Wyoming': 'WY'
+    }
+
+    # Apply cleaning only to players born in the USA
+    usa_players = df['BirthCountry'] == 'Usa'
+
+    # Strip whitespace and convert to uppercase
+    df.loc[usa_players, 'BirthState'] = df.loc[usa_players, 'BirthState'].str.strip().str.upper()
+
+    # Replace full state names with abbreviations
+    df.loc[usa_players, 'BirthState'] = df.loc[usa_players, 'BirthState'].replace(state_mapping)
+    
+    additional_mapping = {
+        'NORTH CAROLINA': 'NC',
+        'FLORIDA': 'FL',
+        'PENNSYLVANIA': 'PA',
+        'UTAH': 'UT',
+        'ARKANSAS': 'AR',
+        'NEW MEXICO': 'NM',
+        'CALIFORNIA': 'CA',
+        'SOUTH CAROLINA': 'SC',
+        'OKLAHOMA': 'OK',
+        'NEW YORK': 'NY',
+        'KENTUCKY': 'KY',
+        'CAL': 'CA',
+        'USA': 'US'
+    }
+
+    df.loc[usa_players, 'BirthState'] = df.loc[usa_players, 'BirthState'].replace(additional_mapping)
+
+    return df
+
+
 def clean_data(df):
     # Handle missing values
     df.fillna(method='ffill', inplace=True)  # Forward fill for missing values
@@ -52,6 +97,9 @@ def clean_data(df):
 
     # Clean country names
     df = clean_country_names(df)
+        # Clean state labels
+    df = clean_state_labels(df)
+
 
     return df
 
