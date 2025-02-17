@@ -72,23 +72,37 @@ def create_marlins_players(engine):
             )
         ''')
 
-def load_data_to_db(transformed_data, db_config):
+def load_data_to_db(transformed_data, db_path, table_name):
     """
-    Load transformed data into the specified database.
-    
+    Load transformed data into the specified SQLite database table.
+
     Parameters:
     transformed_data (DataFrame): The data to be loaded into the database.
-    db_config (dict): Database configuration containing connection details.
+    db_path (str): Path to the SQLite database file.
+    table_name (str): Name of the target table in the database.
     """
     # Establish a database connection
-    engine = get_db_connection(db_config)
+    engine = create_engine(f'sqlite:///{db_path}')
     inspector = inspect(engine)
-    # Create the table with the correct schema
-    create_marlins_players(engine)
-    
-    # Load the transformed data into the database
-    transformed_data.to_sql('marlins_players', con=engine, if_exists='replace', index=False)
-    print(f"Table 'marlins_players' created successfully with {len(transformed_data)} entries.")
+
+    # Check if the table exists
+    if inspector.has_table(table_name):
+        # Load existing data from the table
+        existing_data = pd.read_sql(table_name, con=engine)
+
+        # Identify new records by checking which IDs are not in the existing data
+        new_records = transformed_data[~transformed_data['PlayerID'].isin(existing_data['PlayerID'])]
+
+        if not new_records.empty:
+            # Append new records to the table
+            new_records.to_sql(table_name, con=engine, if_exists='replace', index=False)
+            print(f"Inserted {len(new_records)} new records into the '{table_name}' table.")
+        else:
+            print(f"No new records to insert into the '{table_name}' table.")
+    else:
+        # If the table doesn't exist, create it and insert all data
+        transformed_data.to_sql(table_name, con=engine, if_exists='replace', index=False)
+        print(f"Table '{table_name}' created successfully with {len(transformed_data)} entries.")
 
 # Example usage
 if __name__ == "__main__":

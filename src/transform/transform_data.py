@@ -58,6 +58,8 @@ def clean_data(df):
 def transform_data(file_paths):
     processed_dir = os.getenv('PROCESSED_DATA_PATH')
     os.makedirs(processed_dir, exist_ok=True)
+    
+    transformed_data_list = []
 
     for file_path in file_paths:
         if file_path is None:
@@ -77,8 +79,12 @@ def transform_data(file_paths):
         cleaned_data.to_csv(f'{processed_dir}/cleaned_{file_name}.csv', index=False)
 
         print(f"Processed and saved: {file_name}")
+        
+                # Append the cleaned data to the list
+        transformed_data_list.append(cleaned_data)
 
-# Example usage
+    return transformed_data_list
+#Example usage
 if __name__ == "__main__":
     # List of file paths to process
     file_paths = [
