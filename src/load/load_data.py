@@ -7,6 +7,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.
 import pandas as pd
 from sqlalchemy import create_engine, inspect
 from src.utils.db_utils import get_db_connection
+from datetime import datetime
 
 def create_marlins_players(engine):
     """
@@ -19,6 +20,74 @@ def create_marlins_players(engine):
         connection.execute('''
             CREATE TABLE IF NOT EXISTS marlins_players (
                 PlayerID INTEGER PRIMARY KEY,
+                SportsDataID TEXT,
+                Status TEXT,
+                TeamID INTEGER,
+                Team TEXT,
+                Jersey INTEGER,
+                PositionCategory TEXT,
+                Position TEXT,
+                MLBAMID INTEGER,
+                FirstName TEXT,
+                LastName TEXT,
+                BatHand TEXT,
+                ThrowHand TEXT,
+                Height REAL,
+                Weight REAL,
+                BirthDate TEXT,
+                BirthCity TEXT,
+                BirthState TEXT,
+                BirthCountry TEXT,
+                HighSchool TEXT,
+                College TEXT,
+                ProDebut TEXT,
+                Salary REAL,
+                PhotoUrl TEXT,
+                SportRadarPlayerID TEXT,
+                RotoworldPlayerID INTEGER,
+                RotoWirePlayerID INTEGER,
+                FantasyAlarmPlayerID INTEGER,
+                StatsPlayerID INTEGER,
+                SportsDirectPlayerID INTEGER,
+                XmlTeamPlayerID INTEGER,
+                InjuryStatus TEXT,
+                InjuryBodyPart TEXT,
+                InjuryStartDate TEXT,
+                InjuryNotes TEXT,
+                FanDuelPlayerID INTEGER,
+                DraftKingsPlayerID INTEGER,
+                YahooPlayerID INTEGER,
+                UpcomingGameID INTEGER,
+                FanDuelName TEXT,
+                DraftKingsName TEXT,
+                YahooName TEXT,
+                GlobalTeamID INTEGER,
+                FantasyDraftName TEXT,
+                FantasyDraftPlayerID INTEGER,
+                Experience INTEGER,
+                UsaTodayPlayerID INTEGER,
+                UsaTodayHeadshotUrl TEXT,
+                UsaTodayHeadshotNoBackgroundUrl TEXT,
+                UsaTodayHeadshotUpdated TEXT,
+                UsaTodayHeadshotNoBackgroundUpdated TEXT
+            )
+        ''')
+        
+def create_audit_table(db_path):
+    """
+    Create the players_audit table to log all changes.
+    
+    Parameters:
+    db_path (str): Path to the SQLite database file.
+    """
+    engine = create_engine(f'sqlite:///{db_path}')
+    with engine.connect() as connection:
+        connection.execute('''
+            CREATE TABLE IF NOT EXISTS players_audit (
+                audit_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                operation_type TEXT NOT NULL,
+                operation_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                PlayerID INTEGER,
                 SportsDataID TEXT,
                 Status TEXT,
                 TeamID INTEGER,
@@ -85,6 +154,7 @@ def load_data_to_db(transformed_data, db_path, table_name):
     engine = create_engine(f'sqlite:///{db_path}')
     inspector = inspect(engine)
 
+
     # Check if the table exists
     if inspector.has_table(table_name):
         # Load existing data from the table
@@ -93,15 +163,43 @@ def load_data_to_db(transformed_data, db_path, table_name):
         # Identify new records by checking which IDs are not in the existing data
         new_records = transformed_data[~transformed_data['PlayerID'].isin(existing_data['PlayerID'])]
 
+        # Identify updated records by checking for differences in existing records
+        common_records = transformed_data[transformed_data['PlayerID'].isin(existing_data['PlayerID'])]
+        updated_records = common_records.merge(existing_data, on='PlayerID', suffixes=('', '_existing'))
+
+        # Ensure matching columns before comparison
+        updated_records_filtered = updated_records.filter(regex='^(?!.*_existing$)')
+        common_records_filtered = common_records[updated_records_filtered.columns]
+
+        # Debugging: Print column names to identify the discrepancy
+        print("Updated Records Columns:", updated_records_filtered.columns)
+        print("Common Records Columns:", common_records_filtered.columns)
+
         if not new_records.empty:
             # Append new records to the table
             new_records.to_sql(table_name, con=engine, if_exists='append', index=False)
+            new_records['operation_type'] = 'insert'
+            new_records.to_sql('players_audit', con=engine, if_exists='append', index=False)
             print(f"Inserted {len(new_records)} new records into the '{table_name}' table.")
-        else:
-            print(f"No new records to insert into the '{table_name}' table.")
+
+        if not updated_records_filtered.empty:
+            # Update existing records in the table
+            updated_records_filtered.to_sql(table_name, con=engine, if_exists='replace', index=False)
+            updated_records_filtered.loc[:, 'operation_type'] = 'update'
+            updated_records_filtered.to_sql('players_audit', con=engine, if_exists='append', index=False)
+            print(f"Updated {len(updated_records_filtered)} records in the '{table_name}' table.")
+
+        # Identify deleted records by checking which IDs are not in the transformed data
+        deleted_records = existing_data[~existing_data['PlayerID'].isin(transformed_data['PlayerID'])]
+        if not deleted_records.empty:
+            deleted_records.loc[:, 'operation_type'] = 'delete'
+            deleted_records.to_sql('players_audit', con=engine, if_exists='append', index=False)
+            print(f"Deleted {len(deleted_records)} records from the '{table_name}' table.")
     else:
         # If the table doesn't exist, create it and insert all data
         transformed_data.to_sql(table_name, con=engine, if_exists='replace', index=False)
+        transformed_data.loc[:, 'operation_type'] = 'insert'
+        transformed_data.to_sql('players_audit', con=engine, if_exists='append', index=False)
         print(f"Table '{table_name}' created successfully with {len(transformed_data)} entries.")
 
 # Example usage
