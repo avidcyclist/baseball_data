@@ -95,7 +95,7 @@ def load_data_to_db(transformed_data, db_path, table_name):
 
         if not new_records.empty:
             # Append new records to the table
-            new_records.to_sql(table_name, con=engine, if_exists='replace', index=False)
+            new_records.to_sql(table_name, con=engine, if_exists='append', index=False)
             print(f"Inserted {len(new_records)} new records into the '{table_name}' table.")
         else:
             print(f"No new records to insert into the '{table_name}' table.")
@@ -115,6 +115,9 @@ if __name__ == "__main__":
         'dialect': 'sqlite',
         'database': 'C:/Users/Mitch/Desktop/data-engineering-project/src/ingest/marlins_roster.db'
     }
+    # Database configuration
+    db_path = 'C:/Users/Mitch/Desktop/data-engineering-project/src/ingest/marlins_roster.db'
+    table_name = 'marlins_players'
     
     # Load data into the database
-    load_data_to_db(transformed_data, db_config)
+    load_data_to_db(transformed_data, db_path, table_name)

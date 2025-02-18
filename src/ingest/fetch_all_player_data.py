@@ -30,6 +30,15 @@ def fetch_all_active_players(api_key):
     headers = {'Ocp-Apim-Subscription-Key': api_key}
     return ingest_data_from_api(url, headers)
 
+
+def convert_datetime_format(players):
+    for player in players:
+        if 'BirthDate' in player and player['BirthDate']:
+            player['BirthDate'] = pd.to_datetime(player['BirthDate'], format='%Y-%m-%dT%H:%M:%S', errors='coerce').strftime('%Y-%m-%d')
+        if 'ProDebut' in player and player['ProDebut']:
+            player['ProDebut'] = pd.to_datetime(player['ProDebut'], format='%Y-%m-%dT%H:%M:%S', errors='coerce').strftime('%Y-%m-%d')
+    return players
+
 def store_json(data, json_file_path):
     with open(json_file_path, 'w') as json_file:
         json.dump(data, json_file, indent=4)
@@ -41,6 +50,8 @@ def store_players_in_csv(players, csv_file_path):
 def ingest_all_active_players():
     api_key = os.getenv('SPORTS_DATA_API_KEY')
     players = fetch_all_active_players(api_key)
+        # Convert datetime format
+    players = convert_datetime_format(players)
     json_file_path = os.getenv('ALL_PLAYERS_JSON_PATH')
     store_json(players, json_file_path)
 

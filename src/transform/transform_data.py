@@ -93,7 +93,10 @@ def clean_data(df):
 
     # Convert data types
     df['BirthDate'] = pd.to_datetime(df['BirthDate'], errors='coerce')  # Convert BirthDate column to datetime
+    if 'ProDebut' in df.columns:
+        df['ProDebut'] = pd.to_datetime(df['ProDebut'], errors='coerce')  # Convert ProDebut column to datetime
     df['PlayerID'] = df['PlayerID'].astype(str)  # Ensure PlayerID is a string
+
 
     # Clean country names
     df = clean_country_names(df)
@@ -124,7 +127,7 @@ def transform_data(file_paths):
         file_name = os.path.basename(file_path).replace('.csv', '')
 
         # Save the cleaned data to a new CSV file
-        cleaned_data.to_csv(f'{processed_dir}/cleaned_{file_name}.csv', index=False)
+        cleaned_data.to_csv(f'{processed_dir}/{file_name}.csv', index=False)
 
         print(f"Processed and saved: {file_name}")
         
@@ -137,7 +140,7 @@ if __name__ == "__main__":
     # List of file paths to process
     file_paths = [
         os.getenv('CLEANED_DATA_PATH'),
-        os.getenv('RAW_PLAYERS_DATA_PATH')
+        os.getenv('CLEANED_PLAYERS_DATA_PATH')
     ]
     
     transform_data(file_paths)

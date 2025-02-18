@@ -29,6 +29,15 @@ def fetch_team_roster(team, api_key):
     headers = {'Ocp-Apim-Subscription-Key': api_key}
     return ingest_data_from_api(url, headers)
 
+def convert_datetime_format(players):
+    for player in players:
+        if 'BirthDate' in player and player['BirthDate']:
+            player['BirthDate'] = pd.to_datetime(player['BirthDate'], format='%Y-%m-%dT%H:%M:%S', errors='coerce').strftime('%Y-%m-%d')
+        if 'ProDebut' in player and player['ProDebut']:
+            player['ProDebut'] = pd.to_datetime(player['ProDebut'], format='%Y-%m-%dT%H:%M:%S', errors='coerce').strftime('%Y-%m-%d')
+    return players
+
+
 def store_players_in_csv(players, csv_file_path):
     df = pd.DataFrame(players)
     df.to_csv(csv_file_path, index=False)
@@ -37,6 +46,7 @@ def ingest_marlins_roster():
     api_key = os.getenv('SPORTS_DATA_API_KEY')
     team = 'MIA'
     players = fetch_team_roster(team, api_key)
+    players = convert_datetime_format(players)
     csv_file_path = os.getenv('RAW_DATA_PATH')
     store_players_in_csv(players, csv_file_path)
 

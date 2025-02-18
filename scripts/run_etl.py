@@ -11,7 +11,7 @@ def run_etl():
     # List of file paths to process
     file_paths = [
         os.getenv('CLEANED_DATA_PATH'),
-        os.getenv('RAW_PLAYERS_DATA_PATH')
+        os.getenv('CLEANED_PLAYERS_DATA_PATH')
     ]
 
     # Step 1: Transform data

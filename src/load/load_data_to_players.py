@@ -74,48 +74,41 @@ def create_players_table(engine):
                 UsaTodayHeadshotNoBackgroundUpdated TEXT
             )
         ''')
-def load_data_to_players_db(transformed_data, db_path):
+        
+        
+def load_data_to_players_db(transformed_data, db_path, table_name):
     """
-    Load transformed data into the specified SQLite database, inserting only new records.
-    
+    Load transformed data into the specified SQLite database table.
+
     Parameters:
     transformed_data (DataFrame): The data to be loaded into the database.
     db_path (str): Path to the SQLite database file.
+    table_name (str): Name of the target table in the database.
     """
     # Establish a database connection
     engine = create_engine(f'sqlite:///{db_path}')
     inspector = inspect(engine)
-    
-    # Check if the 'players' table exists
-    if inspector.has_table('players'):
-        # Load existing data from the 'players' table
-        existing_data = pd.read_sql('players', con=engine)
-        
-        # Identify new records by checking which PlayerIDs are not in the existing data
+
+    # Check if the table exists
+    if inspector.has_table(table_name):
+        # Load existing data from the table
+        existing_data = pd.read_sql(table_name, con=engine)
+
+        # Identify new records by checking which IDs are not in the existing data
         new_records = transformed_data[~transformed_data['PlayerID'].isin(existing_data['PlayerID'])]
-        
+
         if not new_records.empty:
-            # Append new records to the 'players' table
-            new_records.to_sql('players', con=engine, if_exists='append', index=False)
-            print(f"Inserted {len(new_records)} new records into the 'players' table.")
-            
-            # Add a timestamp column to new_records
-            new_records['timestamp'] = datetime.now()
-            
-            # Ensure the 'players_audit' table exists
-            if not inspector.has_table('players_audit'):
-                create_audit_table(engine)
-            
-            # Append new records to the 'players_audit' table
-            new_records.to_sql('players_audit', con=engine, if_exists='append', index=False)
-            print(f"Logged {len(new_records)} new records into the 'players_audit' table.")
+            # Append new records to the table
+            new_records.to_sql(table_name, con=engine, if_exists='append', index=False)
+            print(f"Inserted {len(new_records)} new records into the '{table_name}' table.")
         else:
-            print("No new records to insert.")
+            print(f"No new records to insert into the '{table_name}' table.")
     else:
         # If the table doesn't exist, create it and insert all data
-        transformed_data.to_sql('players', con=engine, if_exists='replace', index=False)
-        print(f"Table 'players' created successfully with {len(transformed_data)} entries.")
-        
+        transformed_data.to_sql(table_name, con=engine, if_exists='replace', index=False)
+        print(f"Table '{table_name}' created successfully with {len(transformed_data)} entries.")
+
+    
 def create_audit_table(engine):
     """
     Create the players_audit table if it does not exist.
@@ -184,9 +177,9 @@ def create_audit_table(engine):
 # Example usage
 if __name__ == "__main__":
     # Read data from CSV file
-    csv_file_path = 'C:/Users/Mitch/Desktop/data-engineering-project/data/raw/all_active_players.csv'
-    transformed_data = pd.read_csv(csv_file_path)
+    csv_file_path = 'C:/Users/Mitch/Desktop/data-engineering-project/data/processed/cleaned_all_active_players.csv'
+    transformed_data = pd.read_csv(csv_file_path, parse_dates=['BirthDate', 'ProDebut'])
     
     # Load data into the new database
     db_path = os.getenv('DB_PATH_PLAYERS')
-    load_data_to_players_db(transformed_data, db_path)
+    load_data_to_players_db(transformed_data, db_path, table_name='players')
