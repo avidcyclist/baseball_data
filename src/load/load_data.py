@@ -9,6 +9,9 @@ from sqlalchemy import create_engine, inspect
 from src.utils.db_utils import get_db_connection
 from datetime import datetime
 
+# Enable Copy-on-Write mode
+pd.options.mode.copy_on_write = True
+
 def create_marlins_players(engine):
     """
     Create the marlins_players table with the correct schema if it doesn't exist.
@@ -171,20 +174,17 @@ def load_data_to_db(transformed_data, db_path, table_name):
         updated_records_filtered = updated_records.filter(regex='^(?!.*_existing$)')
         common_records_filtered = common_records[updated_records_filtered.columns]
 
-        # Debugging: Print column names to identify the discrepancy
-        print("Updated Records Columns:", updated_records_filtered.columns)
-        print("Common Records Columns:", common_records_filtered.columns)
-
         if not new_records.empty:
             # Append new records to the table
             new_records.to_sql(table_name, con=engine, if_exists='append', index=False)
-            new_records['operation_type'] = 'insert'
+            new_records.loc[:,'operation_type'] = 'insert'
             new_records.to_sql('players_audit', con=engine, if_exists='append', index=False)
             print(f"Inserted {len(new_records)} new records into the '{table_name}' table.")
 
         if not updated_records_filtered.empty:
             # Update existing records in the table
             updated_records_filtered.to_sql(table_name, con=engine, if_exists='replace', index=False)
+            updated_records_filtered = updated_records_filtered.copy()
             updated_records_filtered.loc[:, 'operation_type'] = 'update'
             updated_records_filtered.to_sql('players_audit', con=engine, if_exists='append', index=False)
             print(f"Updated {len(updated_records_filtered)} records in the '{table_name}' table.")
@@ -192,6 +192,7 @@ def load_data_to_db(transformed_data, db_path, table_name):
         # Identify deleted records by checking which IDs are not in the transformed data
         deleted_records = existing_data[~existing_data['PlayerID'].isin(transformed_data['PlayerID'])]
         if not deleted_records.empty:
+            deleted_records = deleted_records.copy()
             deleted_records.loc[:, 'operation_type'] = 'delete'
             deleted_records.to_sql('players_audit', con=engine, if_exists='append', index=False)
             print(f"Deleted {len(deleted_records)} records from the '{table_name}' table.")
