@@ -21,6 +21,8 @@ def create_players_table(engine):
     with engine.connect() as connection:
         connection.execute('''
             CREATE TABLE IF NOT EXISTS players (
+                 operation_type TEXT NOT NULL,
+                operation_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
                 PlayerID INTEGER PRIMARY KEY,
                 SportsDataID TEXT,
                 Status TEXT,

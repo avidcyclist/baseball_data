@@ -85,7 +85,7 @@ def clean_state_labels(df):
 
 def clean_data(df):
     # Handle missing values
-    df.fillna(method='ffill', inplace=True)  # Forward fill for missing values
+    #df.fillna(method='ffill', inplace=True)  # Forward fill for missing values
 
     # Drop rows where critical columns have missing values
     critical_columns = ['PlayerID', 'FirstName', 'LastName', 'BirthDate']

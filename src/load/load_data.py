@@ -22,6 +22,8 @@ def create_marlins_players(engine):
     with engine.connect() as connection:
         connection.execute('''
             CREATE TABLE IF NOT EXISTS marlins_players (
+                operation_type TEXT NOT NULL,
+                operation_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
                 PlayerID INTEGER PRIMARY KEY,
                 SportsDataID TEXT,
                 Status TEXT,
@@ -157,6 +159,8 @@ def load_data_to_db(transformed_data, db_path, table_name):
     engine = create_engine(f'sqlite:///{db_path}')
     inspector = inspect(engine)
 
+    # Add a timestamp column to the transformed data
+    transformed_data['operation_timestamp'] = datetime.now()
 
     # Check if the table exists
     if inspector.has_table(table_name):
