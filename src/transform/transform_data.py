@@ -103,6 +103,18 @@ def clean_data(df):
         # Clean state labels
     df = clean_state_labels(df)
 
+    # Drop specified columns
+    columns_to_drop = [
+        'UsaTodayPlayerID', 'UsaTodayHeadshotUrl', 'UsaTodayHeadshotNoBackgroundUrl',
+        'UsaTodayHeadshotUpdated', 'UsaTodayHeadshotNoBackgroundUpdated', 'Salary', 'PhotoUrl',
+        'SportRadarPlayerID', 'RotoworldPlayerID', 'RotoWirePlayerID', 'FantasyAlarmPlayerID',
+        'StatsPlayerID', 'SportsDirectPlayerID', 'XmlTeamPlayerID', 'InjuryStatus', 'InjuryBodyPart',
+        'InjuryStartDate', 'InjuryNotes', 'FanDuelPlayerID', 'DraftKingsPlayerID', 'YahooPlayerID',
+        'UpcomingGameID', 'FanDuelName', 'DraftKingsName', 'YahooName', 'GlobalTeamID',
+        'FantasyDraftName', 'FantasyDraftPlayerID'
+    ]
+    df.drop(columns=columns_to_drop, inplace=True, errors='ignore')
+
 
     return df
 
