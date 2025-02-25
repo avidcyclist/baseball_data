@@ -1,6 +1,8 @@
 # Data Engineering Project
 
 On 2/18/2025 I was just messing around in here and fetched and loaded the player rosters and it usually says no new entries - but then I looked and it said 1 new entry! So I searched for it and it was actually captured in my player audit the first time and it was Justin Turner to the Cubs - so thats kinda cool its working :D 
+
+2/25/2025 It inserted Andrew Chafin - looked it up and there he was signed with the Tigers, so that means it is working!
 ## Overview
 This project implements an ETL (Extract, Transform, Load) pipeline for ingesting, processing, and loading baseball data into a database. The pipeline is designed to handle data from various sources, ensuring high data quality and accessibility for analysis.
 
