@@ -3,6 +3,9 @@
 On 2/18/2025 I was just messing around in here and fetched and loaded the player rosters and it usually says no new entries - but then I looked and it said 1 new entry! So I searched for it and it was actually captured in my player audit the first time and it was Justin Turner to the Cubs - so thats kinda cool its working :D 
 
 2/25/2025 It inserted Andrew Chafin - looked it up and there he was signed with the Tigers, so that means it is working!
+
+
+2/26/2025 I checked the 26 insertions - and at the top I saw a name Brady Feigl - he was my teammate in 2014! Well sort of - anyways, he continued up and eventually made it to the MLB, but - I googled and yep it says 2 hours ago the Twins signed him - so that was cool - again showing it is working! 
 ## Overview
 This project implements an ETL (Extract, Transform, Load) pipeline for ingesting, processing, and loading baseball data into a database. The pipeline is designed to handle data from various sources, ensuring high data quality and accessibility for analysis.
 
