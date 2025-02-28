@@ -146,6 +146,58 @@ def load_data_to_db(transformed_data, db_path, table_name):
         transformed_data.loc[:, 'operation_type'] = 'insert'
         transformed_data.to_sql('players_audit', con=engine, if_exists='append', index=False)
         print(f"Table '{table_name}' created successfully with {len(transformed_data)} entries.")
+        
+    # Filter active players
+    active_players = transformed_data[transformed_data['Status'] == 'Active']
+
+    # Create or update the active_players table
+    if inspector.has_table('active_players'):
+        # Load existing data from the active_players table
+        existing_active_data = pd.read_sql('active_players', con=engine)
+
+        # Identify new active records
+        new_active_records = active_players[~active_players['PlayerID'].isin(existing_active_data['PlayerID'])]
+
+        # Identify updated active records
+        common_active_records = active_players[active_players['PlayerID'].isin(existing_active_data['PlayerID'])]
+        updated_active_records = common_active_records.merge(existing_active_data, on='PlayerID', suffixes=('', '_existing'))
+
+        # Ensure matching columns before comparison
+        updated_active_records_filtered = updated_active_records.filter(regex='^(?!.*_existing$)')
+        common_active_records_filtered = common_active_records[updated_active_records_filtered.columns]
+
+        if not new_active_records.empty:
+            # Append new active records to the active_players table
+            new_active_records.to_sql('active_players', con=engine, if_exists='append', index=False)
+            print(f"Inserted {len(new_active_records)} new records into the 'active_players' table.")
+
+        if not updated_active_records_filtered.empty:
+            # Update existing active records in the active_players table
+            for index, row in updated_active_records_filtered.iterrows():
+                # Convert row to a dictionary and handle None values
+                row_dict = row.to_dict()
+                row_dict = {k: (None if pd.isna(v) else v) for k, v in row_dict.items()}
+                # Convert Timestamp to string
+                for key in ['BirthDate', 'ProDebut', 'operation_timestamp']:
+                    if key in row_dict and isinstance(row_dict[key], pd.Timestamp):
+                        row_dict[key] = row_dict[key].strftime('%Y-%m-%d %H:%M:%S')
+                engine.execute(f"""
+                    UPDATE active_players
+                    SET {', '.join([f"{col} = ?" for col in updated_active_records_filtered.columns])}
+                    WHERE PlayerID = ?
+                """, tuple(row_dict.values()) + (row_dict['PlayerID'],))
+            print(f"Updated {len(updated_active_records_filtered)} records in the 'active_players' table.")
+
+        # Identify deleted active records
+        deleted_active_records = existing_active_data[~existing_active_data['PlayerID'].isin(active_players['PlayerID'])]
+        if not deleted_active_records.empty:
+            engine.execute(f"DELETE FROM active_players WHERE PlayerID IN ({', '.join(map(str, deleted_active_records['PlayerID'].tolist()))})")
+            print(f"Deleted {len(deleted_active_records)} records from the 'active_players' table.")
+    else:
+        # If the active_players table doesn't exist, create it and insert all active data
+        active_players.to_sql('active_players', con=engine, if_exists='replace', index=False)
+        print(f"Table 'active_players' created successfully with {len(active_players)} entries.")
+
 
 # Example usage
 if __name__ == "__main__":
