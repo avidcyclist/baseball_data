@@ -150,7 +150,7 @@ def load_data_to_db(transformed_data, db_path, table_name):
     # Filter active players
     active_players = transformed_data[transformed_data['Status'] == 'Active']
 
-    # Create or update the active_players table
+   # Create or update the active_players table
     if inspector.has_table('active_players'):
         # Load existing data from the active_players table
         existing_active_data = pd.read_sql('active_players', con=engine)
@@ -169,6 +169,8 @@ def load_data_to_db(transformed_data, db_path, table_name):
         if not new_active_records.empty:
             # Append new active records to the active_players table
             new_active_records.to_sql('active_players', con=engine, if_exists='append', index=False)
+            new_active_records.loc[:,'operation_type'] = 'insert'
+            new_active_records.to_sql('active_players_audit', con=engine, if_exists='append', index=False)
             print(f"Inserted {len(new_active_records)} new records into the 'active_players' table.")
 
         if not updated_active_records_filtered.empty:
@@ -186,16 +188,23 @@ def load_data_to_db(transformed_data, db_path, table_name):
                     SET {', '.join([f"{col} = ?" for col in updated_active_records_filtered.columns])}
                     WHERE PlayerID = ?
                 """, tuple(row_dict.values()) + (row_dict['PlayerID'],))
+            updated_active_records_filtered['operation_type'] = 'update'
+            updated_active_records_filtered.to_sql('active_players_audit', con=engine, if_exists='append', index=False)
             print(f"Updated {len(updated_active_records_filtered)} records in the 'active_players' table.")
 
         # Identify deleted active records
         deleted_active_records = existing_active_data[~existing_active_data['PlayerID'].isin(active_players['PlayerID'])]
         if not deleted_active_records.empty:
+            deleted_active_records = deleted_active_records.copy()
+            deleted_active_records.loc[:, 'operation_type'] = 'delete'
+            deleted_active_records.to_sql('active_players_audit', con=engine, if_exists='append', index=False)
             engine.execute(f"DELETE FROM active_players WHERE PlayerID IN ({', '.join(map(str, deleted_active_records['PlayerID'].tolist()))})")
             print(f"Deleted {len(deleted_active_records)} records from the 'active_players' table.")
     else:
         # If the active_players table doesn't exist, create it and insert all active data
         active_players.to_sql('active_players', con=engine, if_exists='replace', index=False)
+        active_players.loc[:,'operation_type'] = 'insert'
+        active_players.to_sql('active_players_audit', con=engine, if_exists='append', index=False)
         print(f"Table 'active_players' created successfully with {len(active_players)} entries.")
 
 
